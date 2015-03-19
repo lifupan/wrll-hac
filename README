@@ -1,0 +1,7 @@
+wr-hac layer
+============
+
+This is a layer to create a WR Linux 6 Galileo SDK for Wind River Helix App
+Cloud. This includes necessary kernel components and files in the target
+file system.
+
