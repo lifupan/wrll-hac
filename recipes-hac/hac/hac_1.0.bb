@@ -5,7 +5,7 @@ BUGTRACKER = "https://bugs.eclipse.org/bugs/"
 LICENSE = "EPL-1.0 | EDL-1.0"
 LIC_FILES_CHKSUM = "file://Makefile;md5=5c38456fe56dace2d12005b5a34f2177"
 
-SRCREV = "fc56df34ca16fba95d0224a87b7caf594d9202b1"
+SRCREV = "07eb8e3c3d1e666649a098a505763234e9994ec1"
 PV = "wb_vadk+git${SRCPV}"
 PR = "r1"
 
