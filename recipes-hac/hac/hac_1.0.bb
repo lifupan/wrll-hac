@@ -5,13 +5,13 @@ BUGTRACKER = "https://bugs.eclipse.org/bugs/"
 LICENSE = "EPL-1.0 | EDL-1.0"
 LIC_FILES_CHKSUM = "file://Makefile;md5=5c38456fe56dace2d12005b5a34f2177"
 
-SRCREV = "07eb8e3c3d1e666649a098a505763234e9994ec1"
+SRCREV = "a2c2365a955f327026d41a187599a2687fed0002"
 PV = "wb_vadk+git${SRCPV}"
 PR = "r1"
 
 FILES_${PN} = "/media /media/card ${sbindir}/device ${sysconfdir}/init.d/device ${sysconfdir}/fstab ${sysconfdir}/securetty"
 
-SRC_URI = "git://git.wrs.com/git/projects/tcf-c-core.git \
+SRC_URI = "git://git.wrs.com/git/projects/tcf-c-core.git;branch=wb_vadk \
 	   file://device.init \
 	   file://fstab \
 	   file://securetty \
