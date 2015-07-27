@@ -10,14 +10,13 @@ DAEMON_PATH=/usr/sbin/device
 DAEMON_NAME=`basename $DAEMON_PATH`
 DEVICE_MGR=""
 
-. /etc/init.d/functions
-
 test -x $DAEMON_PATH || exit 0
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 export PATH
 
 RETVAL=0
+device_mgr_cfg="/etc/default/device_mgr.cfg"
 
 get_device_mgr() {
     for arg in `cat /proc/cmdline` ; do
@@ -27,12 +26,12 @@ get_device_mgr() {
       fi
       if [ "${arg##device_mgr_cfg=}" != "${arg}" ]; then
         device_mgr_cfg=${arg##device_mgr_cfg=}
-        if [ -f $device_mgr_cfg ]; then
-	    DEVICE_MGR=`cat $device_mgr_cfg`
-	    return
-	fi
+	break
       fi
     done
+    if [ "device_mgr_cfg" != "" ] && [ -f "$device_mgr_cfg" ]; then
+	DEVICE_MGR=`cat $device_mgr_cfg`
+    fi
 }
 
 case "$1" in
@@ -42,6 +41,7 @@ case "$1" in
 	if [ "$DEVICE_MGR" = "" ]; then
 	    echo "Missing Device Mgr URL, which is required for $DAEMON_NAME to run"
 	    echo "FAIL"
+	    exit 1
 	else
 	    $DAEMON_PATH -d $DEVICE_MGR
 	    RETVAL=$?
@@ -50,6 +50,7 @@ case "$1" in
 		touch /var/lock/subsys/$DAEMON_NAME
 	    else
 		echo "FAIL"
+		exit 1
 	    fi
 	fi
         ;;
@@ -57,20 +58,13 @@ case "$1" in
     stop)
         echo -n "Stopping $DAEMON_NAME: "
         count=0
-        while [ -n "`/bin/pidof $DAEMON_PATH`" -a $count -lt 10 ] ; do
-            killproc $DAEMON_PATH >& /dev/null
-            sleep 1
-            RETVAL=$?
-            if [ $RETVAL != 0 -o -n "`/bin/pidof $DAEMON_PATH`" ] ; then
-                sleep 3
-            fi
-            count=`expr $count + 1`
-        done
+	killall $DAEMON_PATH
         rm -f /var/lock/subsys/$DAEMON_NAME
-        if [ -n "`/bin/pidof $DAEMON_PATH`" ] ; then
-            echo "FAIL"
-        else
+	ps -ef |grep $DAEMON_PATH > /dev/null 2>/dev/null
+        if [ $? = 0 ] ; then
             echo "OK"
+        else
+            echo "FAIL"
         fi
         ;;
 

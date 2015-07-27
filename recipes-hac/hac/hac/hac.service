@@ -1,0 +1,13 @@
+[Unit]
+Description=Auto start Helix Application Cloud Agent
+After=network.target
+
+[Service]
+StandardOutput=syslog
+Type=oneshot
+ExecStart=/etc/hac/hac.init start
+ExecStop=/etc/hac/hac.init stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

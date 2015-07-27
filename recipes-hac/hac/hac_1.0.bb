@@ -9,25 +9,22 @@ SRCREV = "89fd37893806303f29093c178e56332230458af6"
 PV = "wb_vadk+git${SRCPV}"
 PR = "r1"
 
-FILES_${PN} = "/media /media/card ${sbindir}/device ${sysconfdir}/init.d/device ${sysconfdir}/fstab ${sysconfdir}/securetty"
-
 SRC_URI = "git://git.wrs.com/git/projects/tcf-c-core.git;branch=wb_vadk \
-	   file://device.init \
-	   file://fstab \
 	   file://securetty \
+	   file://hac.init \
+	   file://hac.service \
 	   "
 
-dirs = "/media \
-	/media/card"
-
 DEPENDS = "util-linux openssl"
-RDEPENDS_${PN} = "bash"
+RDEPENDS_${PN} = "bash inetutils-inetd"
 
 S = "${WORKDIR}/git/examples/device"
 
-inherit update-rc.d
+inherit update-rc.d systemd
 
-INITSCRIPT_NAME = "device"
+SYSTEMD_SERVICE_${PN} = "hac.service"
+
+INITSCRIPT_NAME = "hac"
 INITSCRIPT_PARAMS = "start 99 3 5 . stop 20 0 1 2 6 ."
 
 # mangling needed for make
@@ -48,8 +45,13 @@ do_install() {
 	oe_runmake install INSTALLDIR=${D}${sbindir}
 	install -d ${D}${sysconfdir}
 	install -d ${D}${sysconfdir}/init.d/
-	install -m 0755 ${WORKDIR}/device.init ${D}${sysconfdir}/init.d/device
-	install -m 0755 ${WORKDIR}/fstab ${D}${sysconfdir}/fstab
-	install -m 0755 ${WORKDIR}/securetty ${D}${sysconfdir}/securetty
+	install -m 0755 ${WORKDIR}/hac.init ${D}${sysconfdir}/init.d/hac
+
+	# systemd
+	install -d ${D}${sysconfdir}/hac/
+	install -m 0755 ${WORKDIR}/hac.init ${D}${sysconfdir}/hac
+	install -d ${D}${systemd_unitdir}/system
+	install -m 0644 ${WORKDIR}/hac.service ${D}${systemd_unitdir}/system
+
 }
 
