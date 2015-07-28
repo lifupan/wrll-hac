@@ -6,6 +6,7 @@ LICENSE = "EPL-1.0 | EDL-1.0"
 LIC_FILES_CHKSUM = "file://Makefile;md5=1633bbc4f9d39da6e84fdd52bf5d9970"
 
 SRCREV = "0f3649a6511af2b45cbd4552f93e31561d8a2ef7"
+
 PV = "wb_vadk+git${SRCPV}"
 PR = "r1"
 
@@ -34,6 +35,7 @@ MAKE_OS = "`echo ${TARGET_OS} | sed s,^linux.*,GNU/Linux,`"
 EXTRA_OEMAKE = "MACHINE=${MAKE_ARCH} OPSYS=${MAKE_OS} 'CC=${CC}' 'AR=${AR}' 'Conf=Release'"
 
 do_compile() {
+	export CONFIGURE_FLAGS="--host=${MAKE_ARCH}-gnu-linux"
 	oe_runmake
 }
 
