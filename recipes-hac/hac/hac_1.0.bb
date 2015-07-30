@@ -3,7 +3,7 @@ HOMEPAGE = "http://wiki.eclipse.org/TCF"
 BUGTRACKER = "https://bugs.eclipse.org/bugs/"
 
 LICENSE = "EPL-1.0 | EDL-1.0"
-LIC_FILES_CHKSUM = "file://Makefile;md5=1633bbc4f9d39da6e84fdd52bf5d9970"
+LIC_FILES_CHKSUM = "file://examples/device/Makefile;md5=1633bbc4f9d39da6e84fdd52bf5d9970"
 
 SRCREV = "0f3649a6511af2b45cbd4552f93e31561d8a2ef7"
 
@@ -19,7 +19,9 @@ SRC_URI = "git://git.wrs.com/git/projects/tcf-c-core.git;branch=wb_vadk \
 DEPENDS = "util-linux openssl"
 RDEPENDS_${PN} = "bash inetutils-inetd"
 
-S = "${WORKDIR}/git/examples/device"
+S = "${WORKDIR}/git"
+
+LSRCPATH = "${S}/examples/device"
 
 inherit update-rc.d systemd
 
@@ -36,15 +38,12 @@ EXTRA_OEMAKE = "MACHINE=${MAKE_ARCH} OPSYS=${MAKE_OS} 'CC=${CC}' 'AR=${AR}' 'Con
 
 do_compile() {
 	export CONFIGURE_FLAGS="--host=${MAKE_ARCH}-gnu-linux"
-	oe_runmake
+	oe_runmake -C ${LSRCPATH}
 }
 
 do_install() {
-  	for d in ${dirs}; do
-	    install -m 0755 -d ${D}$d
-	done
 	install -d ${D}${sbindir}
-	oe_runmake install INSTALLDIR=${D}${sbindir}
+	oe_runmake -C ${LSRCPATH} install INSTALLDIR=${D}${sbindir}
 	install -d ${D}${sysconfdir}
 	install -d ${D}${sysconfdir}/init.d/
 	install -m 0755 ${WORKDIR}/hac.init ${D}${sysconfdir}/init.d/hac
