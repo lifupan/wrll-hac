@@ -12,13 +12,11 @@ PR = "r1"
 
 SRC_URI = "git://git.wrs.com/git/projects/tcf-c-core.git;branch=wb_vadk \
            file://symbols_stack_trace_revert.patch \
-	   file://securetty \
 	   file://hac.init \
 	   file://hac.service \
 	   "
 
 DEPENDS = "util-linux openssl"
-RDEPENDS_${PN} = "bash inetutils-inetd"
 
 S = "${WORKDIR}/git"
 
