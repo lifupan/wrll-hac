@@ -13,9 +13,15 @@ PR = "r1"
 SRC_URI = "git://git.wrs.com/git/projects/tcf-c-core.git;branch=wb_vadk \
 	   file://hac.init \
 	   file://hac.service \
+	   file://registerTarget \
+	   file://HelixUtils.pm \
+	   file://sdkName.txt \
+	   file://sdkVersion.txt \
 	   "
 
 DEPENDS = "util-linux openssl"
+
+RDEPENDS_${PV} = "perl"
 
 S = "${WORKDIR}/git"
 
@@ -34,6 +40,9 @@ MAKE_OS = "`echo ${TARGET_OS} | sed s,^linux.*,GNU/Linux,`"
 
 EXTRA_OEMAKE = "MACHINE=${MAKE_ARCH} OPSYS=${MAKE_OS} 'CC=${CC}' 'AR=${AR}' 'Conf=Release'"
 
+FILES_${PN} += "/usr/local"
+FILES_${PN} += "/etc/default"
+
 do_compile() {
 	export CONFIGURE_FLAGS="--host=${MAKE_ARCH}-gnu-linux"
 	oe_runmake -C ${LSRCPATH}
@@ -45,6 +54,12 @@ do_install() {
 	install -d ${D}${sysconfdir}
 	install -d ${D}${sysconfdir}/init.d/
 	install -m 0755 ${WORKDIR}/hac.init ${D}${sysconfdir}/init.d/hac
+	install -m 0755 ${WORKDIR}/registerTarget ${D}${sbindir}/registerTarget
+	install -d ${D}/usr/local/lib/site_perl/
+	install -m 0644 ${WORKDIR}/HelixUtils.pm ${D}/usr/local/lib/site_perl
+        install -d ${D}/etc/default/
+        install -m 0644 ${WORKDIR}/sdkVersion.txt ${D}/etc/default
+        install -m 0644 ${WORKDIR}/sdkName.txt ${D}/etc/default
 
 	# systemd
 	install -d ${D}${sysconfdir}/hac/

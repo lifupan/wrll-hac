@@ -1,0 +1,454 @@
+#!/usr/bin/perl
+
+# Copyright (c) 2015 Wind River Systems, Inc.
+#
+# The right to copy, distribute, modify or otherwise make use
+# of this software may be licensed only pursuant to the terms
+# of an applicable Wind River license agreement.
+#
+
+# modification history
+# --------------------
+# 13aug15,jdw  Created
+
+# The registerTarget script will use Curl to register a target with
+# the HAC server
+
+use strict;
+use Data::Dumper;
+use File::Basename;
+use File::Spec;
+use File::Spec::Functions;
+use Cwd;
+use Cwd qw{ chdir abs_path };
+use File::Glob;
+use File::Temp qw/ tempfile tempdir /;
+
+use HelixUtils;
+
+##### Globals #####
+# Enable global debug options
+my $debugF = 0;
+
+# Default log message output level
+my $logLvl = 0;
+
+# Default is user running CLI. CGI is off
+my $usrCgiCaller = 0;
+
+# Device Quert false 
+my $usrDeviceID = 0;
+my $queryOperation = 0;
+
+# The script can either register the device OR register and get a code
+# the user enters into the HAC site. This flag tells us which we want
+# to do.
+my $getRegCodeF = 0;
+
+# Variables for CLI options
+my $usrName;
+my $usrPassword;
+my $usrServer;
+my $usrTargetName;
+my $usrSdkName;
+my $usrSdkVer;
+
+undef $usrName;
+undef $usrPassword;
+undef $usrServer;
+undef $usrTargetName;
+undef $usrSdkName;
+undef $usrSdkVer;
+
+# Globals for internal use
+my $hacServer = "app.cloud.windriver.com";
+
+my $sdkName;
+my $sdkVer;
+
+undef $sdkName;
+undef $sdkVer;
+
+my $boardName;
+
+# A temp directory to keep files we're going to need for curl commands
+my $tmpDir = tempdir( CLEANUP => 1 );
+
+# Token data from the server
+my $tokenCSRF;
+my $tokenWRS;
+my $devCfgData;
+my $devRegKey;
+
+# A routine to print out usage info for the program
+sub print_usage
+{
+    print "Usage: \n";
+    print "   $0 <options> -n <string>\n";   
+    print "\t-d              -- Enable debug output\n";
+    print "\t-n <string>     -- Target name\n";
+    print "\t-p <string>     -- SDK server password\n";
+    print "\t-q              -- Quiet / no messages\n";
+    print "\t-s <server>     -- HAC server to register with\n";
+    print "\t-sname <string> -- SDK name\n";
+    print "\t-sver  <string> -- SDK version\n";
+    print "\t-u <string>     -- SDK server user name\n";
+    print "\t-v              -- Verbose messages\n";
+    print "\t-c              -- CGI interface\n";
+    print "\t-e <devID>      -- Query if DevID exists on server\n";
+    print "\t-?, --help      -- Print this usage info\n\n";
+    print "  The tool supports directly registering a device or \n";
+    print "  registering and getting back a registration key. To \n";
+    print "  register without a key a user name and password is required.\n";
+
+}
+
+####################################
+### The program really begins here
+
+# Set the log level if debug flag is set
+$logLvl = 2 if $debugF;
+$queryOperation = 0;
+
+## Check the CLI args
+while ( scalar @ARGV )
+{
+    my $arg = shift( @ARGV );
+
+    if  ( "-d" eq $arg )
+    {
+	$debugF = 1;
+	$logLvl = 2;
+	$arg = shift( @ARGV );
+	if ( defined ( $arg ) )
+	{
+	    if ( $arg =~ m|^-?[0-9]| ) 
+	    {
+		$logLvl = $arg;
+	    }
+	    else
+	    {
+		unshift( @ARGV, $arg );
+	    }	    
+	}
+    }
+    elsif ( "-e" eq $arg )
+        {
+        $arg = shift (@ARGV);
+        if ( defined ($arg) )
+            {
+            $usrDeviceID = $arg;
+            $queryOperation = 1;
+            }
+        else
+            {
+            die "ERROR: Missing optin after $arg! Aborting\n";
+            }
+        }
+    elsif ( "-n" eq $arg )
+        {
+           $arg = shift( @ARGV );
+            if ( defined ( $arg ) )
+            {
+		$usrTargetName = $arg;
+            }
+            else
+            {
+                die "ERROR: Missing option after $arg! Aborting!\n";
+            }	    
+        }
+    elsif ( "-p" eq $arg )
+        {
+           $arg = shift( @ARGV );
+            if ( defined ( $arg ) )
+            {
+		$usrPassword = $arg;
+            }
+            else
+            {
+                die "ERROR: Missing option after $arg! Aborting!\n";
+            }	    
+        }
+    elsif ( "-q" eq $arg )
+        {
+	    $logLvl = -1;
+	}
+    elsif( "-c" eq $arg )
+        {
+            $usrCgiCaller = 1;
+        }
+    elsif( "-s" eq $arg )
+    {
+	$arg = shift( @ARGV );
+	if ( defined ( $arg ) )
+	{
+	    $usrServer = $arg;
+	}
+	else
+	{
+	    die "ERROR: Missing option after $arg! Aborting!\n";
+	}
+    }
+    elsif( "-sname" eq $arg )
+    {
+	$arg = shift( @ARGV );
+	if ( defined ( $arg ) )
+	{
+	    $usrSdkName = $arg;
+	}
+	else
+	{
+	    die "ERROR: Missing option after $arg! Aborting!\n";
+	}
+    }
+    elsif( "-sver" eq $arg )
+    {
+	$arg = shift( @ARGV );
+	if ( defined ( $arg ) )
+	{
+	    $usrSdkVer = $arg;
+	}
+	else
+	{
+	    die "ERROR: Missing option after $arg! Aborting!\n";
+	}
+    }
+    elsif ( "-u" eq $arg )
+        {
+           $arg = shift( @ARGV );
+            if ( defined ( $arg ) )
+            {
+		$usrName = $arg;
+            }
+            else
+            {
+                die "ERROR: Missing option after $arg! Aborting!\n";
+            }	    
+        }
+    elsif ( "-v" eq $arg )
+        {
+	    # If Debug is already specified, don't change this
+	    $logLvl = 1 unless ( $debugF );
+	}
+    elsif ( ( "--help" eq $arg ) ||
+	    ( "-?" eq $arg ) )
+        {
+            print_usage();
+            exit( 0 );
+        }
+    else
+    {
+	print_usage();
+	die "ERROR: Unknown option[ $arg ]! Aborting!\n";
+    }
+}
+
+# Setup the log level
+setLogLvl( $logLvl );
+
+unless ( ( $usrTargetName && $usrSdkName ) || 
+	 $queryOperation )
+{
+    ( $sdkName, $boardName ) = getDefaultSdkName();
+}
+
+if ( $usrTargetName )
+{
+    $boardName = $usrTargetName;
+}
+else
+{
+    $boardName = getDefaultBoardName();
+
+    logMsg( "Generated board name: $boardName\n", { debug => 1 } );
+}
+
+if ( $usrName && $usrPassword )
+{
+    unless ( $boardName )
+    {
+         print_usage();
+         die "ERROR: Can't register without a board name!\n";
+    }
+}
+
+# Get the name and version of the SDK from the data files in a known
+# location if they aren't specified as CLI options
+if ( $usrSdkName )
+{
+    $sdkName = $usrSdkName;
+}
+
+unless( $usrSdkVer || $queryOperation )
+{
+    $sdkVer = getDefaultSdkVer();
+
+    die "ERROR: Can't read expected SDK config data file! Aborting!!\n"
+	unless $sdkVer;
+}
+else
+{
+    $sdkVer = $usrSdkVer;
+}
+
+# User specified the server, so use it instead of the default
+if ( $usrServer )
+{
+    $hacServer = $usrServer;
+}
+else
+{
+    my $defServer = getDefaultHacServer();
+    $hacServer = $defServer if ( $defServer );
+}
+
+logMsg( "Using HAC Server: $hacServer\n", { debug => 1 } );
+
+# make sure we have the minimum required options
+unless ( $usrName && $usrPassword )
+{
+    logMsg( "No user name or password detected, requesting registration code\n",
+	    { lvl => 1 } );
+    $getRegCodeF = 1;
+}
+
+my $cmd;
+my $r;
+my $rslt;
+my $errMsg;
+
+$tokenCSRF = hacGetCSRFToken( $hacServer, \$r, \$errMsg);
+
+if ( $r )
+{
+    logMsg( $errMsg, { fatal => 1 } );
+}
+
+logMsg( "CSRF Token: [ $tokenCSRF ]\n", { debug => 1 } );
+
+#
+# If this is a query (-e) then just get the device status and exit
+#
+if ( $queryOperation )
+{
+    my $devStatus = hacGetDeviceStatus( $hacServer, $usrDeviceID, $tokenCSRF,
+					\$r, \$errMsg );
+    
+    if ( $r )
+    {
+	logMsg( "ERROR getting status:\n " . 
+		"  $errMsg", { fatal => 1 } );
+    }
+
+    if ( $usrCgiCaller == 0 )
+    {
+        print "Status: $devStatus\n";
+    }
+    else
+    {
+        print "$devStatus";
+    }
+    
+    exit 0;
+}
+
+if ( $getRegCodeF )
+{
+    # Generate a target with the specified name
+    my $devUid;
+    my $devServerUrl;
+
+    ( $devRegKey, $devUid, $devServerUrl ) =
+	hacGenerateNamedTarget( $hacServer, $boardName, $sdkName, $sdkVer,
+				$tokenCSRF, \$r, \$errMsg );
+   
+    if ( $r )
+    {
+	logMsg( "ERROR registering:\n " . 
+		"  $errMsg", { fatal => 1 } );
+    }
+
+    logMsg( "Device Reg Key[ $devRegKey ]\n", { debug => 1 } );    
+    logMsg( "Device UID[ $devUid ]\n", { debug => 1 } );   
+    logMsg( "Device Server Url[ $devServerUrl ]\n", { debug => 1 } );
+    
+    $devCfgData = $devServerUrl . ";ID=" . $devUid;
+    
+    logMsg( "Device Mgr Cfg[ $devCfgData ]\n", { debug => 1 } );
+    
+    # Get the expiration time for the key
+    my ( $devRegStatus, $devRegExpireTime_s ) = 
+	hacGetKeyExpiration( $hacServer, $devRegKey, $tokenCSRF,
+			     \$r, \$errMsg );
+
+    if ( $r )
+    {
+	logMsg( "ERROR getting registration expiration:\n " . 
+		"  $errMsg", { fatal => 1 } );
+    }
+
+    my $devRegExpireTime_m = $devRegExpireTime_s / 60;
+   
+    if ( $usrCgiCaller == 0 )
+    { 
+	print( "Created target [ $boardName ] on server [ $hacServer ]\n" .
+	       "Device regisration status: $devRegStatus\n" .
+	       "Device registration expires in $devRegExpireTime_m (mins)\n" .
+	       "Device Registration Key: $devRegKey\n" );
+    }
+    else
+    {
+	print( "$devRegKey:$devRegExpireTime_s:$devRegStatus");
+    }
+}
+else
+{
+    # Get the WRS token
+    $tokenWRS = hacGetWRSToken( $hacServer, $usrName, $usrPassword,
+				$tokenCSRF, \$r, \$errMsg );
+    
+    if ( $r )
+    {
+	logMsg( "ERROR getting WRS:\n " . 
+		"  $errMsg\n", { fatal => 1 } );
+    }
+
+    logMsg( "WRS Token: [ " . $tokenWRS . " ]\n", { debug => 1 } );
+
+    # Generate a target with the specified name
+    my ( $devUid, $devServerUrl ) = 
+	hacRegisterTarget( $hacServer, $boardName, $sdkName, $sdkVer,
+			   $tokenCSRF, $tokenWRS, \$r, \$errMsg );
+
+    if ( $r )
+    {
+	logMsg( "ERROR registering target:\n " . 
+		"  $errMsg", { fatal => 1 } );
+    }
+
+    $devCfgData = $devServerUrl . ";ID=" . $devUid;
+    
+    logMsg( "Device UID[ $devUid ]\n", { debug => 1 } );
+    logMsg( "Device Server Url[ $devServerUrl ]\n", { debug => 1 } );
+    logMsg( "Device Mgr Cfg[ $devCfgData ]\n", { debug => 1 } );
+
+    if ( $usrCgiCaller == 0 )
+        {
+        print( "Created target [ $boardName ] on server [ $hacServer ]\n" );
+        }
+    else
+        {
+        print( "$boardName:$hacServer");
+        }
+}
+
+( 0 == setDefaultSdkCfgData( $devCfgData . "\n" ) ) or 
+    die "ERROR: Can't write device config data file! Aborting!!\n";
+
+# Restart the HAC service to pick up the new configuration
+$cmd = "systemctl restart hac.service";
+
+execCmd( $cmd, \$r );
+
+die "ERROR: Restarting HAC service failed!\n" if ( $r );
+
