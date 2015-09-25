@@ -3,9 +3,9 @@ HOMEPAGE = "http://wiki.eclipse.org/TCF"
 BUGTRACKER = "https://bugs.eclipse.org/bugs/"
 
 LICENSE = "EPL-1.0 | EDL-1.0"
-LIC_FILES_CHKSUM = "file://examples/device/Makefile;md5=07bdc7a9b30de285e6429307963932db"
+LIC_FILES_CHKSUM = "file://examples/daytime/about.html;md5=a89e631b5fcb68cb522020633380b7ea"
 
-SRCREV = "b2be25db62368bbbd964b23cf4604059a758e0f5"
+SRCREV = "6300f9d1c8d6abf002250feba7b43f2b93590c03"
 
 PV = "wb_vadk+git${SRCPV}"
 PR = "r1"
