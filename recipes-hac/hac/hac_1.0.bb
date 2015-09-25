@@ -5,7 +5,7 @@ BUGTRACKER = "https://bugs.eclipse.org/bugs/"
 LICENSE = "EPL-1.0 | EDL-1.0"
 LIC_FILES_CHKSUM = "file://examples/daytime/about.html;md5=a89e631b5fcb68cb522020633380b7ea"
 
-SRCREV = "6300f9d1c8d6abf002250feba7b43f2b93590c03"
+SRCREV = "e236e3abcc6c949e80c8592c8fbd6e71c3c8ecb1"
 
 PV = "wb_vadk+git${SRCPV}"
 PR = "r1"
