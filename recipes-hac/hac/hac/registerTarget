@@ -374,6 +374,9 @@ if ( $getRegCodeF )
     
     $devCfgData = $devServerUrl . ";ID=" . $devUid;
     
+    # Temporary work around
+    $devCfgData =~ s#^(WSS:).*?(:443.*)#$1$hacServer$2#;
+
     logMsg( "Device Mgr Cfg[ $devCfgData ]\n", { debug => 1 } );
     
     # Get the expiration time for the key
@@ -428,6 +431,9 @@ else
 
     $devCfgData = $devServerUrl . ";ID=" . $devUid;
     
+    # Temporary work around
+    $devCfgData =~ s#^(WSS:).*?(:443.*)#$1$hacServer$2#;
+
     logMsg( "Device UID[ $devUid ]\n", { debug => 1 } );
     logMsg( "Device Server Url[ $devServerUrl ]\n", { debug => 1 } );
     logMsg( "Device Mgr Cfg[ $devCfgData ]\n", { debug => 1 } );
