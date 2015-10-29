@@ -40,8 +40,8 @@ case "$1" in
 	get_device_mgr
 	if [ "$DEVICE_MGR" = "" ]; then
 	    echo "Missing Device Mgr URL, which is required for $DAEMON_NAME to run"
-	    echo "FAIL"
-	    exit 1
+	    echo "SKIP"
+	    exit 0
 	else
 	    $DAEMON_PATH -d $DEVICE_MGR
 	    RETVAL=$?
