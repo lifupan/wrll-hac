@@ -10,13 +10,17 @@ SRCREV = "e21c73dab7b67af841272afdddb6e232bbafda98"
 PV = "wb_vadk+git${SRCPV}"
 PR = "r1"
 
+HAC_SDKVERSION ?= "7.9.0.0"
+HAC_SDKNAME ?= "wrl7_simics_ppc"
+
+# The config files are machine specific
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 SRC_URI = "git://git.wrs.com/git/projects/tcf-c-core.git;branch=wb_vadk \
 	   file://hac.init \
 	   file://hac.service \
 	   file://registerTarget \
 	   file://HelixUtils.pm \
-	   file://sdkName.txt \
-	   file://sdkVersion.txt \
 	   "
 
 DEPENDS = "util-linux openssl"
@@ -58,8 +62,10 @@ do_install() {
 	install -d ${D}/usr/local/lib/site_perl/
 	install -m 0644 ${WORKDIR}/HelixUtils.pm ${D}/usr/local/lib/site_perl
         install -d ${D}/etc/default/
-        install -m 0644 ${WORKDIR}/sdkVersion.txt ${D}/etc/default
-        install -m 0644 ${WORKDIR}/sdkName.txt ${D}/etc/default
+        echo "${HAC_SDKVERSION}" > ${S}/sdkVersion.txt
+        echo "${HAC_SDKNAME}" > ${S}/sdkName.txt
+        install -m 0644 ${S}/sdkVersion.txt ${D}/etc/default/sdkVersion.txt
+        install -m 0644 ${S}/sdkName.txt ${D}/etc/default/sdkName.txt
 
 	# systemd
 	install -d ${D}${sysconfdir}/hac/
