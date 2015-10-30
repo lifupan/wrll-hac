@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://examples/daytime/about.html;md5=a89e631b5fcb68cb52202
 SRCREV = "e21c73dab7b67af841272afdddb6e232bbafda98"
 
 PV = "wb_vadk+git${SRCPV}"
-PR = "r1"
+PR = "r2"
 
 HAC_SDKVERSION ?= "7.9.0.0"
 HAC_SDKNAME ?= "wrl7_simics_ppc"
