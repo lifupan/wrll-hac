@@ -5,10 +5,7 @@ BUGTRACKER = "https://bugs.eclipse.org/bugs/"
 LICENSE = "EPL-1.0 | EDL-1.0"
 LIC_FILES_CHKSUM = "file://examples/daytime/about.html;md5=a89e631b5fcb68cb522020633380b7ea"
 
-SRCREV = "e21c73dab7b67af841272afdddb6e232bbafda98"
-
-PV = "wb_vadk+git${SRCPV}"
-PR = "r2"
+SRCREV = "f72176620734495dc6dbf9dadf2f641ee8d7ef59"
 
 HAC_SDKVERSION ?= "7.9.0.0"
 HAC_SDKNAME ?= "wrl7_simics_ppc"
@@ -16,7 +13,7 @@ HAC_SDKNAME ?= "wrl7_simics_ppc"
 # The config files are machine specific
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-SRC_URI = "git://git.wrs.com/git/projects/tcf-c-core.git;branch=wb_vadk \
+SRC_URI = "git://github.com/WindRiver-OpenSourceLabs/tcf-c-core.git;branch=hac \
 	   file://hac.init \
 	   file://hac.service \
 	   file://registerTarget \
