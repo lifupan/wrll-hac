@@ -29,8 +29,8 @@ get_device_mgr() {
 	break
       fi
     done
-    if [ "device_mgr_cfg" != "" ] && [ -f "$device_mgr_cfg" ]; then
-	DEVICE_MGR=`cat $device_mgr_cfg`
+    if [ "device_mgr_cfg" != "" ]; then
+	DEVICE_MGR=file:${device_mgr_cfg}
     fi
 }
 
