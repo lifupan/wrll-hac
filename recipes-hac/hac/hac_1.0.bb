@@ -16,7 +16,7 @@ HAC_SDKNAME ?= "wrl7_simics_ppc"
 # The config files are machine specific
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-SRC_URI = "git://git.wrs.com/git/projects/tcf-c-core.git;branch=wb_vadk \
+SRC_URI = "git://github.com/WindRiver-OpenSourceLabs/tcf-c-core.git;branch=hac \
 	   file://hac.init \
 	   file://hac.service \
 	   file://registerTarget \
