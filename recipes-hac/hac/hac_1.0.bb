@@ -11,7 +11,7 @@ PV = "wb_vadk+git${SRCPV}"
 PR = "r3"
 
 HAC_SDKVERSION ?= "7.9.0.0"
-HAC_SDKNAME ?= "wrl7_simics_ppc"
+HAC_SDKNAME ?= "wrl7_${MACHINE}"
 
 # The config files are machine specific
 PACKAGE_ARCH = "${MACHINE_ARCH}"
