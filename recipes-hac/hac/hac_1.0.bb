@@ -5,10 +5,10 @@ BUGTRACKER = "https://bugs.eclipse.org/bugs/"
 LICENSE = "EPL-1.0 | EDL-1.0"
 LIC_FILES_CHKSUM = "file://examples/daytime/about.html;md5=a89e631b5fcb68cb522020633380b7ea"
 
-SRCREV = "6073f71a3df3b1f9a5fd58f9a5266001e985db14"
+SRCREV = "4191bbcef38ee288c918b92a9d40450a4655b5a7"
 
 PV = "wb_vadk+git${SRCPV}"
-PR = "r4"
+PR = "r5"
 
 HAC_SDKVERSION ?= "7.9.0.0"
 HAC_SDKNAME ?= "wrl7_${MACHINE}"
